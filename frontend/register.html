@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitLife | Crear cuenta</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="auth">
+    <form id="form" class="card auth-card">
+      <a class="logo" href="index.html">FIT<span>LIFE</span></a>
+      <h1>Crea tu cuenta</h1>
+      <label>Nombre<input type="text" name="nombre" required></label>
+      <label>Correo<input type="email" name="email" required></label>
+      <label>Contraseña (mínimo 6 caracteres)<input type="password" name="password" minlength="6" required></label>
+      <p class="error" id="error"></p>
+      <button class="btn btn-block" id="btn">Registrarme</button>
+      <p class="muted center">¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+    </form>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (getToken()) location.href = 'dashboard.html';
+
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn');
+      const error = document.getElementById('error');
+      error.textContent = '';
+      btn.disabled = true;
+      const f = new FormData(e.target);
+      try {
+        await api('/usuarios/register', {
+          method: 'POST',
+          body: { nombre: f.get('nombre'), email: f.get('email'), password: f.get('password') }
+        });
+        // Inicia sesión automáticamente después de registrarse
+        const data = await api('/usuarios/login', {
+          method: 'POST',
+          body: { email: f.get('email'), password: f.get('password') }
+        });
+        guardarSesion(data.token, data.usuario);
+        location.href = 'dashboard.html';
+      } catch (err) {
+        error.textContent = err.message;
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitLife | Panel</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="logo" href="index.html">FIT<span>LIFE</span></a>
+      <nav>
+        <button class="nav-item active" data-section="inicio">Dashboard</button>
+        <button class="nav-item" data-section="planes" id="nav-planes">Planes</button>
+        <button class="nav-item" data-section="membresia" id="nav-membresia">Mi membresía</button>
+        <button class="nav-item" data-section="perfil">Perfil</button>
+      </nav>
+      <button class="nav-item" data-action="logout">Cerrar sesión</button>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <h1 id="titulo">Dashboard</h1>
+        <div class="user-chip"><span id="chip-nombre"></span><span class="badge" id="chip-rol"></span></div>
+      </header>
+      <section id="sec-inicio" class="section active"></section>
+      <section id="sec-planes" class="section"></section>
+      <section id="sec-membresia" class="section"></section>
+      <section id="sec-perfil" class="section"></section>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
