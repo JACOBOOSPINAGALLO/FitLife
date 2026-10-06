@@ -55,7 +55,16 @@ foreach ($service in $services) {
         Select-Object -First 1
     if ($listener) {
         $owner = Get-CimInstance Win32_Process -Filter "ProcessId = $($listener.OwningProcess)"
-        if ($owner.CommandLine -match [regex]::Escape((Join-Path $service.Path 'src\app.js'))) {
+        $app = Join-Path $service.Path 'src\app.js'
+        $parent = if ($owner.ParentProcessId) {
+            Get-CimInstance Win32_Process -Filter "ProcessId = $($owner.ParentProcessId)" `
+                -ErrorAction SilentlyContinue
+        }
+        $isExpectedService = $owner.CommandLine -match [regex]::Escape($app) -or
+            ($owner.CommandLine -match 'src[\\/]+app\.js' -and
+                $parent.CommandLine -and
+                $parent.CommandLine.IndexOf($service.Path, [StringComparison]::OrdinalIgnoreCase) -ge 0)
+        if ($isExpectedService) {
             Write-Output "$($service.Name) ya está corriendo en el puerto $($service.Port)."
             continue
         }
