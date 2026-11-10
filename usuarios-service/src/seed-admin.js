@@ -4,14 +4,24 @@ const repo = require('./repositories/usuario.repository');
 const pool = require('./config/db');
 
 (async () => {
-  const email = 'admin@fitlife.com';
-  const existe = await repo.findByEmail(email);
-  if (existe) {
-    console.log('El admin ya existe');
-  } else {
-    const password_hash = await bcrypt.hash('Admin123*', 10);
-    await repo.create({ nombre: 'Administrador', email, password_hash, rol: 'ADMIN' });
-    console.log('✅ Admin creado: admin@fitlife.com / Admin123*');
+  const { ADMIN_EMAIL: email, ADMIN_PASSWORD: password } = process.env;
+  if (!email || !password) {
+    throw new Error('ADMIN_EMAIL y ADMIN_PASSWORD deben estar configurados en usuarios-service/.env');
   }
-  await pool.end();
-})();
+
+  try {
+    const existe = await repo.findByEmail(email);
+    if (existe) {
+      console.log('El admin ya existe');
+    } else {
+      const password_hash = await bcrypt.hash(password, 10);
+      await repo.create({ nombre: 'Administrador', email, password_hash, rol: 'ADMIN' });
+      console.log(`✅ Admin creado: ${email}`);
+    }
+  } finally {
+    await pool.end();
+  }
+})().catch((error) => {
+  console.error('No se pudo crear el administrador:', error.message);
+  process.exitCode = 1;
+});

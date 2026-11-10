@@ -1,5 +1,9 @@
+param(
+    [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+)
+
 $ErrorActionPreference = 'Stop'
-$root = Split-Path -Parent $PSScriptRoot
+$root = (Resolve-Path $ProjectRoot).Path
 $logs = Join-Path $env:LOCALAPPDATA 'FitLife\logs'
 $services = @(
     @{ Name = 'gateway'; Port = 3000; Path = Join-Path $root 'gateway' },
@@ -20,7 +24,7 @@ if (-not $mysql) {
     }
 
     Start-Process -FilePath $mysqlServer `
-        -ArgumentList @("--defaults-file=$mysqlConfig", '--standalone') `
+        -ArgumentList @("--defaults-file=`"$mysqlConfig`"", '--standalone') `
         -RedirectStandardOutput (Join-Path $logs 'mysql.out.log') `
         -RedirectStandardError (Join-Path $logs 'mysql.err.log') `
         -WindowStyle Hidden | Out-Null
@@ -43,12 +47,24 @@ foreach ($service in $services) {
     if (-not (Test-Path $envFile)) {
         throw "Falta la configuración local: $envFile. Cópiala desde .env.example y completa tus datos."
     }
+    if (-not (Test-Path (Join-Path $service.Path 'node_modules'))) {
+        throw "Faltan las dependencias de $($service.Name). Ejecuta npm ci en $($service.Path)."
+    }
 
     $listener = Get-NetTCPConnection -LocalPort $service.Port -State Listen -ErrorAction SilentlyContinue |
         Select-Object -First 1
     if ($listener) {
         $owner = Get-CimInstance Win32_Process -Filter "ProcessId = $($listener.OwningProcess)"
-        if ($owner.CommandLine -match [regex]::Escape((Join-Path $service.Path 'src\app.js'))) {
+        $app = Join-Path $service.Path 'src\app.js'
+        $parent = if ($owner.ParentProcessId) {
+            Get-CimInstance Win32_Process -Filter "ProcessId = $($owner.ParentProcessId)" `
+                -ErrorAction SilentlyContinue
+        }
+        $isExpectedService = $owner.CommandLine -match [regex]::Escape($app) -or
+            ($owner.CommandLine -match 'src[\\/]+app\.js' -and
+                $parent.CommandLine -and
+                $parent.CommandLine.IndexOf($service.Path, [StringComparison]::OrdinalIgnoreCase) -ge 0)
+        if ($isExpectedService) {
             Write-Output "$($service.Name) ya está corriendo en el puerto $($service.Port)."
             continue
         }
