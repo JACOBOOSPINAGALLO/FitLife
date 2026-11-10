@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS fitlife_usuarios;
+CREATE DATABASE IF NOT EXISTS fitlife_planes;
+CREATE DATABASE IF NOT EXISTS fitlife_membresias;

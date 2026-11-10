@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitLife | Entrena. Evoluciona.</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="logo" href="index.html">FIT<span>LIFE</span></a>
+    <div class="nav-links">
+      <a class="btn btn-outline" href="login.html">Iniciar sesión</a>
+      <a class="btn" href="register.html">Comenzar</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Entrena.<br>Evoluciona.<br><em>Supera tus límites.</em></h1>
+    <p>Elige tu plan, activa tu membresía y gestiona todo tu gimnasio desde un solo lugar.</p>
+    <a class="btn" id="cta" href="register.html">Comenzar ahora</a>
+  </section>
+
+  <section class="features">
+    <div class="card feature"><h3>Planes</h3><p>Básico, Premium o VIP: elige el que va con tu ritmo.</p></div>
+    <div class="card feature"><h3>Membresía</h3><p>Consulta tu estado y los días que te quedan en tiempo real.</p></div>
+    <div class="card feature"><h3>Seguridad</h3><p>Sesión protegida con JWT y contraseñas encriptadas.</p></div>
+    <div class="card feature"><h3>Microservicios</h3><p>Usuarios, planes y membresías, cada uno con su propia base de datos.</p></div>
+  </section>
+
+  <footer class="footer">FitLife · Proyecto de microservicios con Node.js, Express, MySQL y JWT</footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    if (getToken()) {
+      const cta = document.getElementById('cta');
+      cta.textContent = 'Ir a mi panel';
+      cta.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>

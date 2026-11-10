@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: gateway
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["gateway:3000"]
+
+  - job_name: usuarios
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["usuarios:3001"]
+
+  - job_name: planes
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["planes:3002"]
+
+  - job_name: membresias
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["membresias:3003"]
+
+  - job_name: cadvisor
+    static_configs:
+      - targets: ["cadvisor:8080"]

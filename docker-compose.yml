@@ -1,0 +1,119 @@
+services:
+  gateway:
+    image: ${DOCKERHUB_USER:-local}/fitlife-gateway:latest
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      PORT: "3000"
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-local-secret}
+      USUARIOS_URL: http://usuarios:3001
+      PLANES_URL: http://planes:3002
+      MEMBRESIAS_URL: http://membresias:3003
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - usuarios
+      - planes
+      - membresias
+
+  usuarios:
+    image: ${DOCKERHUB_USER:-local}/fitlife-usuarios:latest
+    build:
+      context: ./usuarios-service
+      dockerfile: Dockerfile
+    environment:
+      PORT: "3001"
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: "3306"
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: fitlife_usuarios
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-local-secret}
+      JWT_EXPIRES: 8h
+    ports:
+      - "127.0.0.1:3001:3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  planes:
+    image: ${DOCKERHUB_USER:-local}/fitlife-planes:latest
+    build:
+      context: ./planes-service
+      dockerfile: Dockerfile
+    environment:
+      PORT: "3002"
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: "3306"
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: fitlife_planes
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-local-secret}
+    ports:
+      - "127.0.0.1:3002:3002"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  membresias:
+    image: ${DOCKERHUB_USER:-local}/fitlife-membresias:latest
+    build:
+      context: ./membresias-service
+      dockerfile: Dockerfile
+    environment:
+      PORT: "3003"
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: "3306"
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: fitlife_membresias
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-random-local-secret}
+      PLANES_URL: http://planes:3002
+    ports:
+      - "127.0.0.1:3003:3003"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - gateway
+      - usuarios
+      - planes
+      - membresias
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    privileged: true
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+
+  db:
+    image: mysql:8.4
+    profiles:
+      - db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-}
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  prometheus_data:
+  mysql_data:
